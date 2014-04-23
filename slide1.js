@@ -7,7 +7,6 @@ function slide1(config){
 	this.isPause        = false;
 	this.picNum         = config.picNum || 4;
 	this.timer          = null;
-	
 	this.init();
 	this.auto();
 }
