@@ -1,8 +1,3 @@
-/**
-vision : 2.1
-new param : delay 
-author    : mxm145@163.com
-**/
 function Scroll(config){
 	this.id       = config.id;
 	this.dir      = config.dir || 'left';
