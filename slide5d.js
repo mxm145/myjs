@@ -2,8 +2,6 @@ function slide5(config){
 	this.imgContainer   = config.imgContainer || 'H-slide1';
 	this.leftButton     = config.leftButton || 'H-slide2';
 	this.rightButton    = config.rightButton || 'H-slide3';
-	this.linkButton     = config.linkButton || 'none';
-	this.linkButtonclass= config.linkButtonclass || 'act';
 	this.textContainer  = config.textContainer || 'none';
 	this.speed          = config.speed || 5;
 	this.isPause        = false;
@@ -47,11 +45,6 @@ slide5.prototype = {
 	CurrentStyle : function(element){
 		return element.currentStyle || document.defaultView.getComputedStyle(element, null);
 	},
-	Each : function(list,fun){
-		for(var i=0,len=list.length;i<len;i++){
-			fun(list[i],i);
-		}
-	},
 	init : function(){
 		this.$(this.imgContainer).style.width = this.picNum * this.width + 'px';
 		var that = this;
@@ -91,30 +84,6 @@ slide5.prototype = {
 			if(document.hasFocus()){
 				dir == undefined && (dir = 'left');
 				this.b = parseInt(this.CurrentStyle(this.$(this.imgContainer))['left']);
-				var index = parseInt(Math.abs(this.b)/this.width);
-				if(++index >= this.picNum){
-					index = 0;
-				}
-				if(this.textContainer != 'none'){
-					var titleList = this.$(this.textContainer, 'li');
-					this.Each(titleList,function(e,f){
-						if(f == index){
-							e.style.display = 'block';
-						}else{
-							e.style.display = 'none';
-						}
-					});
-				}
-				if(this.linkButton != 'none'){
-					var lb = this.$(this.linkButton, 'li');
-					this.Each(lb, function(g, h){
-						if(h == index){
-							g.className = 'action';
-						}else{
-							g.className = '';
-						}
-					});
-				}
 				if(dir == 'left'){
 					this.target = this.b - this.width;
 					if(this.target <= -this.width * this.picNum){
