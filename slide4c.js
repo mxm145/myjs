@@ -3,6 +3,7 @@ function slide4(config){
 	this.thumbContainer = config.thumbContainer || 'H-slide3';
 	this.textContainer  = config.textContainer || 'H-slide2';
 	this.speed          = config.speed || 5000;
+	this.env            = config.env || 'pc';
 	this.imgIndex       = 0;
 	this.isPause        = false;
 	this.tt             = null;
@@ -10,37 +11,35 @@ function slide4(config){
 	this.width          = config.width || 400;
 	this.height         = config.height || 290;
 	this.dir            = config.dir || 'horizontal';
-	var scroll = true;
-	if(config.autoscroll != undefined) scroll = config.autoscroll;
 	this.t = this.b = this.c = this.target = 0;
 	this.init();
-	if(scroll) this.auto();
+	this.auto();
 };
 slide4.prototype = {
-	$ : function(o){
+	$: function(o){
 		return document.getElementById(o);
 	},
-	$$ : function(o, tag){
+	$$: function(o, tag){
 		return this.$(o).getElementsByTagName(tag);
 	},
-	addEvent : function(elm,evType,fn,useCapture){
+	addEvent: function(elm,evType,fn,useCapture){
 		if(elm.addEventListener){
 			elm.addEventListener(evType, fn, useCapture);
 		}else if(elm.attachEvent){
 			elm.attachEvent('on' + evType, fn);
 		}else{
-			elm['on' + evtype] = fn;
+			elm['on' + evType] = fn;
 		}
 	},
-	Each : function(list,fun){
+	Each: function(list,fun){
 		for(var i=0,len=list.length;i<len;i++){
 			fun(list[i],i);
 		}
 	},
-	CurrentStyle : function(element){
+	CurrentStyle: function(element){
 		return element.currentStyle || document.defaultView.getComputedStyle(element, null);
 	},
-	init : function(){
+	init: function(){
 		var that = this;
 		if(this.thumbContainer != 'none'){
 			this.imgs = this.$$(this.thumbContainer, 'li');
@@ -53,21 +52,29 @@ slide4.prototype = {
 					that.isPause = false;
 				});
 			});
+			if(this.env == 'pc'){
+				this.bindPC();
+			}else if(this.env == 'mob'){
+				this.bindMobile();
+			}else if(this.env == 'all'){
+				this.bindPC();
+				this.bindMobile();
+			}
 		}
 	},
-	play : function(imgIndex){
+	play: function(imgIndex){
 		imgIndex == undefined && (imgIndex = this.imgIndex);
 		imgIndex < 0 && (imgIndex = this.picNum) || imgIndex >= (this.picNum + 1) && (imgIndex = 1);
-
+		var tempI;
 		this.target = imgIndex * (this.dir == 'horizontal' ? this.width : this.height);
 		this.t = 0;
 		this.b = this.dir == 'horizontal' ? parseInt(this.$(this.imgContainer).scrollLeft) : parseInt(this.$(this.imgContainer).scrollTop);
 		this.c = this.target - this.b;
 
 		if(imgIndex == 0 || imgIndex == this.picNum){
-			var tempI = 1;
+			tempI = 1;
 		}else{
-			var tempI = imgIndex + 1;
+			tempI = imgIndex + 1;
 		}
 
 		if(this.thumbContainer != 'none'){
@@ -91,26 +98,25 @@ slide4.prototype = {
 				}
 			});
 		}
-
 		this.imgIndex = ++imgIndex;
-		
 		this.move();
 	},
-	auto : function(){
-		var that = this;
+	auto: function(){
+		var that = this,
+			timer;
 		if(!this.isPause){
 			if(timer) clearTimeout(timer);
 			this.play();
-			var timer = setTimeout(function(){that.auto();}, this.speed);
+			timer = setTimeout(function(){that.auto();}, this.speed);
 		}else{
-			var timer = setTimeout(function(){that.auto();}, 500);
+			timer = setTimeout(function(){that.auto();}, 500);
 		}
 	},
 	easeInOut: function(t,b,c,d){
 		if ((t/=d/2) < 1) return c/2*t*t + b;
 		return -c/2 * ((--t)*(t-2) - 1) + b;
 	},
-	move : function(){
+	move: function(){
 		clearTimeout(this.tt);
 		var that = this;
 		if(this.c && this.t < 50){
@@ -123,7 +129,50 @@ slide4.prototype = {
 			}
 		}
 	},
-	moveTo : function(i){
+	moveTo: function(i){
 		this.dir == 'horizontal' ? this.$(this.imgContainer).scrollLeft = i : this.$(this.imgContainer).scrollTop = i;
+	},
+	bindPC: function(){
+		var that = this;
+		that.addEvent(this.$(this.imgContainer), 'mouseover', function(){
+			that.isPause = true;
+		});
+		that.addEvent(this.$(this.imgContainer), 'mouseout', function(){
+			that.isPause = false;
+		});
+	},
+	bindMobile: function(){
+		var that = this,
+			direction,
+			startPosition,
+			delta;
+		that.addEvent(this.$(this.imgContainer), 'touchstart', function(e){
+			that.isPause = true;
+			var touch = e.touches[0];
+			startPosition = {
+                x: touch.pageX,
+                y: touch.pageY
+            }
+		});
+		that.addEvent(this.$(this.imgContainer), 'touchmove', function(e){
+			e.preventDefault();
+			var touch = e.touches[0];
+			delta = {  
+                x: touch.pageX - startPosition.x,  
+                y: touch.pageY - startPosition.y
+           	};
+			direction = delta.x > 0 ? 'left' : 'right';
+		});
+		that.addEvent(this.$(this.imgContainer), 'touchend', function(e){
+			if(direction == 'right'){
+				that.play();
+			}else if(direction == 'left'){
+				var tmpIndex = that.imgIndex -= 2;
+				if(tmpIndex < 0) tmpIndex = 0;
+				that.imgIndex = tmpIndex;
+				that.play(tmpIndex);
+			}
+			that.isPause = false;
+		});
 	}
-};
+}

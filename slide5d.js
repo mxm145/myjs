@@ -12,6 +12,7 @@ function slide5(config){
 	this.direction      = config.direction || 'horizontal';
 	this.speed *= 1000;
 	this.t = this.b = this.c = this.target = 0;
+	this.env            = config.env || 'pc';
 	this.linkButtonArr = '';
 	var that = this;
 	var scroll = true;
@@ -28,31 +29,33 @@ function slide5(config){
 	if(scroll) this.timer = setTimeout(function(){that.auto();}, this.speed);
 }
 slide5.prototype = {
-	$ : function(o,e){
+	$: function(o,e){
+		var r;
 		if(e){
-			return document.getElementById(o).getElementsByTagName(e);
+			r = document.getElementById(o).getElementsByTagName(e);
 		}else{
-			return document.getElementById(o);
+			r = document.getElementById(o);
 		}
+		return r;
 	},
-	addEvent : function(elm,evType,fn,useCapture){
+	addEvent: function(elm,evType,fn,useCapture){
 		if(elm.addEventListener){
 			elm.addEventListener(evType, fn, useCapture);
 		}else if(elm.attachEvent){
 			elm.attachEvent('on' + evType, fn);
 		}else{
-			elm['on' + evtype] = fn;
+			elm['on' + evType] = fn;
 		}
 	},
-	CurrentStyle : function(element){
+	CurrentStyle: function(element){
 		return element.currentStyle || document.defaultView.getComputedStyle(element, null);
 	},
-	Each : function(list,fun){
+	Each: function(list,fun){
 		for(var i=0,len=list.length;i<len;i++){
 			fun(list[i],i);
 		}
 	},
-	init : function(){
+	init: function(){
 		this.$(this.imgContainer).style.width = this.picNum * this.width + 'px';
 		var that = this;
 		if(this.leftButton != 'none'){
@@ -79,14 +82,16 @@ slide5.prototype = {
 				that.isPause = false;
 			});
 		}
-		this.addEvent(this.$(this.imgContainer), 'mouseover', function(){
-			that.isPause = true;
-		});
-		this.addEvent(this.$(this.imgContainer), 'mouseout', function(){
-			that.isPause = false;
-		});
+		if(this.env == 'pc'){
+			this.bindPC();
+		}else if(this.env == 'mob'){
+			this.bindMobile();
+		}else if(this.env == 'all'){
+			this.bindPC();
+			this.bindMobile();
+		}
 	},
-	play : function(dir){
+	play: function(dir){
 		if(this.picNum > 1){
 			if(document.hasFocus()){
 				dir == undefined && (dir = 'left');
@@ -132,7 +137,7 @@ slide5.prototype = {
 			}
 		}
 	},
-	auto : function(){
+	auto: function(){
 		var _this = this;
 		if(!this.isPause){
 			if(this.timer) clearTimeout(this.timer);
@@ -146,7 +151,7 @@ slide5.prototype = {
 		if ((t/=d/2) < 1) return c/2*t*t + b;
 		return -c/2 * ((--t)*(t-2) - 1) + b;
 	},
-	move : function(){
+	move: function(){
 		clearTimeout(this.tt);
 		var that = this;
 		if(this.t < 50){
@@ -163,7 +168,43 @@ slide5.prototype = {
 			}
 		}
 	},
-	moveTo : function(i){
+	moveTo: function(i){
 		this.$(this.imgContainer).style.left = i + 'px';
+	},
+	bindPC: function(){
+		var that = this;
+		this.addEvent(this.$(this.imgContainer), 'mouseover', function(){
+			that.isPause = true;
+		});
+		this.addEvent(this.$(this.imgContainer), 'mouseout', function(){
+			that.isPause = false;
+		});
+	},
+	bindMobile: function(){
+		var that = this,
+			direction,
+			startPosition,
+			delta;
+		that.addEvent(this.$(this.imgContainer), 'touchstart', function(e){
+			that.isPause = true;
+			var touch = e.touches[0];
+			startPosition = {
+                x: touch.pageX,
+                y: touch.pageY
+            }
+		});
+		that.addEvent(this.$(this.imgContainer), 'touchmove', function(e){
+			e.preventDefault();
+			var touch = e.touches[0];
+			delta = {  
+                x: touch.pageX - startPosition.x,  
+                y: touch.pageY - startPosition.y
+           	};
+			direction = delta.x > 0 ? 'right' : 'left';
+		});
+		that.addEvent(this.$(this.imgContainer), 'touchend', function(e){
+			that.play(direction);
+			that.isPause = false;
+		});
 	}
 };
