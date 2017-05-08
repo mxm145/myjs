@@ -31,6 +31,14 @@ slide4.prototype = {
 			elm['on' + evType] = fn;
 		}
 	},
+	removeEvent: function(obj, type, fn){
+	  if ( obj.detachEvent ) {
+	    obj.detachEvent( 'on'+type, obj[type+fn] );
+	    obj[type+fn] = null;
+	  } else{
+	    obj.removeEventListener( type, fn, false );
+	  }
+	},
 	Each: function(list,fun){
 		for(var i=0,len=list.length;i<len;i++){
 			fun(list[i],i);
@@ -157,22 +165,25 @@ slide4.prototype = {
 		that.addEvent(this.$(this.imgContainer), 'touchmove', function(e){
 			e.preventDefault();
 			var touch = e.touches[0];
-			delta = {  
-                x: touch.pageX - startPosition.x,  
+			delta = {
+                x: touch.pageX - startPosition.x,
                 y: touch.pageY - startPosition.y
            	};
 			direction = delta.x > 0 ? 'left' : 'right';
 		});
 		that.addEvent(this.$(this.imgContainer), 'touchend', function(e){
-			if(direction == 'right'){
-				that.play();
-			}else if(direction == 'left'){
-				var tmpIndex = that.imgIndex -= 2;
-				if(tmpIndex < 0) tmpIndex = 0;
-				that.imgIndex = tmpIndex;
-				that.play(tmpIndex);
+			if (Math.abs(delta.x) > 50) {
+				if(direction == 'right'){
+					that.play();
+				}else if(direction == 'left'){
+					var tmpIndex = that.imgIndex -= 2;
+					if(tmpIndex < 0) tmpIndex = 0;
+					that.imgIndex = tmpIndex;
+					that.play(tmpIndex);
+				}
+				that.isPause = false;
 			}
-			that.isPause = false;
+			that.removeEvent(this.$(this.imgContainer), 'touchmove');
 		});
 	}
 }
